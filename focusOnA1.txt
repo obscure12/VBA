@@ -1,0 +1,15 @@
+' ブック内のすべてのシートの選択セルをA1にし、倍率を100%にする
+Sub focusOnA1()
+    ' ループ変数
+    Dim targetSheet As Object
+    
+    ' ブック内のシートでループ
+    For Each targetSheet In ActiveWorkbook.Sheets
+        targetSheet.Activate
+        ActiveSheet.Range("A1").Select
+        ActiveWindow.Zoom = 100
+    Next targetSheet
+    
+    ' ブック内の先頭シートをアクティブにする
+    Sheets(1).Select
+End Sub
