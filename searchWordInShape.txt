@@ -1,0 +1,95 @@
+' 検索文字列
+Private searchStr As String
+
+' 検索結果出力時の出力先セルのカウンタ変数
+Private outputCount As Integer
+
+' 検索結果出力シート名
+Const searchResultOutputSheetName = "検索結果"
+
+' オブジェクト内の文字列を検索する
+Sub searchWordInShape()
+    outputCount = 1
+    searchStr = InputBox("検索文字列を入力してください")
+
+    ' ブック内のシート分ループ
+    For Each targetSheet In ActiveWorkbook.Sheets
+        
+        Dim parentShape As Shape
+        
+        ' シート内のオートシェイプでループ
+        For Each parentShape In targetSheet.Shapes
+            
+            Dim text As String
+        
+            ' オートシェイプがグループ化されている場合
+            If parentShape.Type = msoGroup Then
+                Dim groupedShape As Shape
+                
+                ' グループ化されているオートシェイプでループ
+                For Each groupedShape In parentShape.GroupItems
+                    text = groupedShape.TextFrame.Characters.text
+                
+                    If InStr(text, searchStr) > 0 Then
+                        ' オートシェイプの文字列に検索文字がある場合
+                        outputSearchResult targetSheet.Name, text, groupedShape
+                    End If
+                Next groupedShape
+            ' オートシェイプがグループ化されていない場合
+            Else
+                text = parentShape.DrawingObject.Characters.text
+                
+                If InStr(text, searchStr) > 0 Then
+                    ' オートシェイプの文字列に検索文字がある場合
+                    outputSearchResult targetSheet.Name, text, parentShape
+                End If
+            End If
+            
+        Next parentShape
+        
+    Next targetSheet
+
+End Sub
+
+' 検索結果の出力を行う
+' linkTargetSheetName 検索結果の対象が存在するシート名
+' displayString 検索結果の文字列
+' linkTargetShape ヒットしたオートシェイプ
+Sub outputSearchResult(linkTargetSheetName As String, displayString As String, linkTargetShape As Shape)
+    If outputCount = 1 Then
+        If existsSheet(searchResultOutputSheetName) Then
+            ' 検索結果を出力するシートがすでに存在する場合シートを削除する
+            Application.DisplayAlerts = False
+            Worksheets(searchResultOutputSheetName).Delete
+            Application.DisplayAlerts = True
+        End If
+        ' 検索結果を出力するシートの作成
+        Worksheets.Add after:=Worksheets(Worksheets.Count)
+        ActiveSheet.Name = searchResultOutputSheetName
+    End If
+    
+    ' 検索結果を出力するシートをアクティブにする
+    Worksheets(searchResultOutputSheetName).Activate
+    
+    ' 検索結果の出力
+    ActiveSheet.Hyperlinks.Add Anchor:=Range("A" & outputCount), Address:="", SubAddress:=linkTargetSheetName & "!" & linkTargetShape.TopLeftCell.Address, TextToDisplay:=searchStr
+    
+    outputCount = outputCount + 1
+End Sub
+
+' シートの存在チェック
+' SheetName チェックするシート名
+Public Function existsSheet(SheetName As String) As Boolean
+    Dim result As Boolean
+    result = False
+    
+    ' ブック内のシート分ループ
+    For Each targetSheet In ActiveWorkbook.Sheets
+        If targetSheet.Name = SheetName Then
+            ' チェック対象のシートが存在した場合
+            result = True
+            Exit For
+        End If
+    Next
+    existsSheet = result
+End Function
