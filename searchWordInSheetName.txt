@@ -1,0 +1,47 @@
+' 検索文字列
+Private searchStr As String
+
+' 検索結果出力時の出力先セルのカウンタ変数
+Private outputCount As Integer
+
+' 検索結果出力シート名
+Const searchResultOutputSheetName = "検索結果"
+
+' シート名を検索する
+Sub searchWordInSheetName()
+    outputCount = 1
+    searchStr = InputBox("検索文字列を入力してください")
+    
+    For Each targetSheet In ActiveWorkbook.Sheets
+        If targetSheet.Name Like "*" & searchStr & "*" Then
+            outputSearchResult (targetSheet.Name)
+        End If
+        
+    Next targetSheet
+End Sub
+
+' 検索結果の出力を行う
+' linkTargetSheetName 検索に引っかかったシート名
+Sub outputSearchResult(linkTargetSheetName As String)
+    If outputCount = 1 Then
+        If existsSheet(searchResultOutputSheetName) Then
+            ' 検索結果を出力するシートがすでに存在する場合シートを削除する
+            Application.DisplayAlerts = False
+            Worksheets(searchResultOutputSheetName).Delete
+            Application.DisplayAlerts = True
+        End If
+        
+        ' 検索結果を出力するシートの作成
+        Worksheets.Add after:=Worksheets(Worksheets.Count)
+        ActiveSheet.Name = searchResultOutputSheetName
+    End If
+    
+    ' 検索結果を出力するシートをアクティブにする
+    Worksheets(searchResultOutputSheetName).Activate
+    
+    ' 検索結果の出力
+    ActiveSheet.Hyperlinks.Add Anchor:=Range("A" & outputCount), Address:="", SubAddress:=linkTargetSheetName & "!A1", TextToDisplay:=linkTargetSheetName
+    
+    outputCount = outputCount + 1
+    
+End Sub
